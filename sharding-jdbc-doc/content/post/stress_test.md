@@ -1,7 +1,7 @@
 +++
 date = "2016-01-08T16:14:21+08:00"
 title = "压力测试报告"
-weight = 6
+weight = 10
 chart = true
 +++
 # 压力测试报告
@@ -25,7 +25,7 @@ chart = true
 | 数据表行数   | 1000万                   | 1000万                   |
 ## 网络拓扑
 
-![网络拓扑图](img/stress_test_arch.png)
+![网络拓扑图](../../img/stress_test_arch.png)
 ## 单库情况下Sharding-JDBC与JDBC性能对比
 测试结论：
 

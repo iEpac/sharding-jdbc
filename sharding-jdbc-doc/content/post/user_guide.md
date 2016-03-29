@@ -1,7 +1,7 @@
 +++
 date = "2016-01-08T16:14:21+08:00"
 title = "使用指南"
-weight = 1
+weight = 2
 +++
 
 # 使用指南
@@ -225,7 +225,7 @@ public Collection<String> doBetweenSharding(final Collection<String> availableTa
 
 下面是一个余2的算法的例子，当分片键的值除以2余数就是实际表的结尾。注意注释中提供了一些算法生成SQL的结果，参数`tableNames`集合中有两个参数`t_order_0`和`t_order_1`
 ```java
- public final class ModuloDatabaseShardingAlgorithm implements SingleKeyDatabaseShardingAlgorithm<Integer> {
+ public final class ModuloTableShardingAlgorithm implements SingleKeyTableShardingAlgorithm<Integer> {
     
     /**
     *  select * from t_order from t_order where order_id = 11 
@@ -254,9 +254,9 @@ public Collection<String> doBetweenSharding(final Collection<String> availableTa
     public Collection<String> doInSharding(final Collection<String> tableNames, final ShardingValue<Integer> shardingValue) {
         Collection<String> result = new LinkedHashSet<>(tableNames.size());
         for (Integer value : shardingValue.getValues()) {
-            for (String dataSourceName : tableNames) {
-                if (dataSourceName.endsWith(value % 2 + "")) {
-                    result.add(dataSourceName);
+            for (String tableName : tableNames) {
+                if (tableName.endsWith(value % 2 + "")) {
+                    result.add(tableName);
                 }
             }
         }
@@ -385,3 +385,5 @@ String sql = "SELECT i.* FROM t_order o JOIN t_order_item i ON o.order_id=i.orde
         }
 ```
 该数据源与普通数据源完全相同，你可以通过上例的API形式来使用，也可以将其配置在Spring，Hibernate等框架中使用。
+
+> 如果希望不依赖于表中的列传入分片键值，参考：[基于暗示(Hint)的分片键值注册方法](../hint_shardingvalue)

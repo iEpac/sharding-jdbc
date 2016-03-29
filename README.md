@@ -39,6 +39,11 @@
 * 分片策略灵活，可支持`=`，`BETWEEN`，`IN`等多维度分片，也可支持多分片键共用。
 * `SQL`解析功能完善，支持聚合，分组，排序，`Limit`，`OR`等查询，并且支持`Binding Table`以及笛卡尔积的表查询。
 
+`Sharding-JDBC`配置多样：
+
+* 可支持YAML和Spring命名空间配置
+* 灵活多样的`inline`方式
+
 ***
 
 以下是常见的分库分表产品和`Sharding-JDBC`的对比：
@@ -59,6 +64,8 @@
 
 ![整体架构图](http://dangdangdotcom.github.io/sharding-jdbc/img/architecture.png)
 
+![柔性事务-最大努力送达型](http://dangdangdotcom.github.io/sharding-jdbc/img/architecture-soft-transaction-bed.png)
+
 # 相关文档
 
 [Release Notes](http://dangdangdotcom.github.io/sharding-jdbc/post/release_notes/)
@@ -67,13 +74,23 @@
 
 [详细功能列表](http://dangdangdotcom.github.io/sharding-jdbc/post/features/)
 
+[核心概念](http://dangdangdotcom.github.io/sharding-jdbc/post/conpects/)
+
 [架构图](http://dangdangdotcom.github.io/sharding-jdbc/post/architecture/)
+
+[Yaml文件和Spring命名空间配置](http://dangdangdotcom.github.io/sharding-jdbc/post/configuration/)
+
+[基于暗示(Hint)的分片键值注册方法](http://dangdangdotcom.github.io/sharding-jdbc/post/hint_shardingvalue/)
+
+[柔性事务(未合并至主干,目前在sharding-jdbc-transaction分支)](http://dangdangdotcom.github.io/sharding-jdbc/post/soft_transaction)
 
 [目录结构说明](http://dangdangdotcom.github.io/sharding-jdbc/post/directory_structure)
 
 [阅读源码编译问题说明](http://dangdangdotcom.github.io/elastic-job/post/source_code_guide)
 
 [使用限制](http://dangdangdotcom.github.io/sharding-jdbc/post/limitations/)
+
+[SQL支持详细列表](http://dangdangdotcom.github.io/sharding-jdbc/post/sql_supported/)
 
 [压力测试报告](http://dangdangdotcom.github.io/sharding-jdbc/post/stress_test/)
 
@@ -94,7 +111,7 @@
 <dependency>
     <groupId>com.dangdang</groupId>
     <artifactId>sharding-jdbc-core</artifactId>
-    <version>1.0.0</version>
+    <version>${latest.release.version}</version>
 </dependency>
 ```
 
@@ -111,7 +128,7 @@
 
 >详细的规则配置请参考[用户指南](http://dangdangdotcom.github.io/sharding-jdbc/post/user_guide/)
 
-## 使用基于ShardingDataSource的JDBC接口
+## 使用原生JDBC接口
 通过规则配置对象获取`ShardingDataSource`，`ShardingDataSource`实现自`JDBC`的标准接口`DataSource`。然后可通过`DataSource`选择使用原生`JDBC`开发，或者使用`JPA`, `MyBatis`等`ORM`工具。
 以`JDBC`原生实现为例：
 ```java
@@ -132,3 +149,46 @@ try (
 }
 ```
 
+## 使用Spring命名空间配置
+```xml
+
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:rdb="http://www.dangdang.com/schema/ddframe/rdb" 
+    xsi:schemaLocation="http://www.springframework.org/schema/beans 
+                        http://www.springframework.org/schema/beans/spring-beans.xsd
+                        http://www.springframework.org/schema/context 
+                        http://www.springframework.org/schema/context/spring-context.xsd 
+                        http://www.dangdang.com/schema/ddframe/rdb 
+                        http://www.dangdang.com/schema/ddframe/rdb/rdb.xsd 
+                        ">
+    <context:property-placeholder location="classpath:conf/rdb/conf.properties" ignore-unresolvable="true"/>
+    
+    <bean id="dbtbl_0" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+        <property name="driverClassName" value="com.mysql.jdbc.Driver"/>
+        <property name="url" value="jdbc:mysql://localhost:3306/dbtbl_0"/>
+        <property name="username" value="root"/>
+        <property name="password" value=""/>
+    </bean>
+    <bean id="dbtbl_1" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+        <property name="driverClassName" value="com.mysql.jdbc.Driver"/>
+        <property name="url" value="jdbc:mysql://localhost:3306/dbtbl_1"/>
+        <property name="username" value="root"/>
+        <property name="password" value=""/>
+    </bean>
+
+    <rdb:strategy id="orderTableStrategy" sharding-columns="order_id" algorithm-expression="t_order_${order_id % 4}"/>
+    <rdb:strategy id="orderItemTableStrategy" sharding-columns="order_id" algorithm-expression="t_order_item_${order_id % 4}"/>
+    <rdb:data-source id="shardingDataSource">
+        <rdb:sharding-rule data-sources="dbtbl_0,dbtbl_1">
+            <rdb:table-rules>
+                <rdb:table-rule logic-table="t_order" actual-tables="t_order_${0..3}" table-strategy="orderTableStrategy"/>
+                <rdb:table-rule logic-table="t_order_item" actual-tables="t_order_item_${0..3}" table-strategy="orderItemTableStrategy"/>
+            </rdb:table-rules>
+            <rdb:default-database-strategy sharding-columns="user_id" algorithm-expression="dbtbl_${user_id % 2 + 1}"/>
+        </rdb:sharding-rule>
+    </rdb:data-source>
+</beans>
+```

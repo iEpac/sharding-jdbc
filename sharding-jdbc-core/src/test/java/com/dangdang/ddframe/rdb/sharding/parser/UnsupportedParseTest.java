@@ -19,10 +19,9 @@ package com.dangdang.ddframe.rdb.sharding.parser;
 
 import java.util.Collections;
 
-import org.junit.Test;
-
 import com.dangdang.ddframe.rdb.sharding.api.DatabaseType;
 import com.dangdang.ddframe.rdb.sharding.exception.SQLParserException;
+import org.junit.Test;
 
 public final class UnsupportedParseTest {
     
@@ -45,4 +44,5 @@ public final class UnsupportedParseTest {
     public void assertAlter() throws SQLParserException {
         SQLParserFactory.create(DatabaseType.MySQL, "ALTER TABLE `order` ADD COLUMN `other` VARCHAR(45)", Collections.emptyList(), Collections.<String>emptyList());
     }
+    
 }

@@ -34,8 +34,11 @@ public final class MetricsContextTest {
     }
     
     private void run(final boolean enable) {
-        MetricsContext metricsContext = new MetricsContext(enable, 1000000L, "example");
-        metricsContext.register();
+        if(enable){
+            ThreadLocalObjectContainer container = new ThreadLocalObjectContainer();
+            container.initItem(new MetricsContext(1000000L, "example"));
+            container.build();
+        }
         Context context = MetricsContext.start("example");
         MetricsContext.stop(context);
     }

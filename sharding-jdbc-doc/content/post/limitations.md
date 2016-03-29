@@ -1,7 +1,7 @@
 +++
 date = "2016-01-08T16:14:21+08:00"
 title = "使用限制"
-weight = 5
+weight = 8
 +++
 
 # 使用限制
@@ -44,14 +44,3 @@ weight = 5
 ###  不支持特殊`INSERT`
 每条`INSERT`语句只能插入一条数据，不支持`VALUES`后有多行数据的语句
 ###  不支持`DISTINCT`聚合
-###  对于`*`谨慎使用
-一般情况下`SELECT`语句中是可以使用`*`的，如下的`SQL`可以正常在`Sharding-JDBC`中使用。
-```sql
-select * from order;
-```
-但以下几种SQL不允许使用`*`
-
-- 语句中存在聚合函数`AVG`
-- `GROUP BY`语句
-- `ORDER BY`语句
-
